@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="iso-8859-1" ?>
+
+<table>
+  <base>CRM/PostalcodeRange</base>
+  <class>AacPostal</class>
+  <name>civicrm_aac_postal</name>
+  <comment>Table for AAC Postal Codes</comment>
+  <log>true</log>
+
+  <field>
+    <name>id</name>
+    <type>int unsigned</type>
+    <required>true</required>
+    <comment>Unique AacPostal ID</comment>
+    <html>
+      <type>Number</type>
+    </html>
+  </field>
+  <primaryKey>
+    <name>id</name>
+    <autoincrement>true</autoincrement>
+  </primaryKey>
+
+  <field>
+    <name>contact_id</name>
+    <type>int unsigned</type>
+    <comment>FK to Contact</comment>
+  </field>
+  <foreignKey>
+    <name>contact_id</name>
+    <table>civicrm_contact</table>
+    <key>id</key>
+    <onDelete>CASCADE</onDelete>
+  </foreignKey>
+
+  <field>
+    <name>postal_code</name>
+    <type>varchar</type>
+    <length>10</length>
+    <required>true</required>
+    <comment>Postal Code</comment>
+  </field>
+
+  <field>
+    <name>aac_name</name>
+    <type>varchar</type>
+    <length>30</length>
+    <required>true</required>
+    <comment>AAC Name</comment>
+  </field>
+
+</table>

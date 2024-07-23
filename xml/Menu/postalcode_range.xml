@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<menu>
+  <item>
+    <path>civicrm/postalcode</path>
+    <page_callback>CRM_PostalcodeRange_Form_AddPostalCode</page_callback>
+    <title>AddPostalCode</title>
+    <access_arguments>access CiviCRM</access_arguments>
+  </item>
+  <item>
+    <path>civicrm/postalcode/search</path>
+    <page_callback>CRM_PostalcodeRange_Page_PostalcodeSearch</page_callback>
+    <title>PostalcodeSearch</title>
+    <access_arguments>access CiviCRM</access_arguments>
+  </item>
+</menu>

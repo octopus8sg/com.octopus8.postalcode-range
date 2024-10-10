@@ -1,4 +1,3 @@
-
 <!-- Add Postal Code Button -->
 <div style="margin-top: 10px; margin-bottom: 10px;">
   <a href="{$addPostalCodeUrl}" class="crm-button" style="color: white; background-color: #007bff;">Add Postal Code</a>
@@ -20,6 +19,12 @@
         <td>{$postalCode.postal_code}</td>
         <td>{$postalCode.aac_name}</td>
         <td>
+          <!-- Edit Button -->
+          <a href="{$addPostalCodeUrl}&edit_id={$postalCode.id}" class="action-item edit-job crm-hover-button" style="margin-right: 10px;">
+            <i class="crm-i fa-edit"></i> Edit
+          </a>
+          
+          <!-- Delete Button -->
           <a href="{$baseUrl}&delete_id={$postalCode.id}" class="action-item delete-job crm-hover-button" onclick="return confirm('Are you sure you want to delete this postal code?');">
             <i class="crm-i fa-trash"></i> Delete
           </a>
@@ -28,4 +33,3 @@
     {/foreach}
   </tbody>
 </table>
-

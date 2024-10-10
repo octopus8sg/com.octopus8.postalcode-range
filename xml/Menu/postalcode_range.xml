@@ -12,4 +12,10 @@
     <title>PostalcodeSearch</title>
     <access_arguments>access CiviCRM</access_arguments>
   </item>
+  <item>
+    <path>civicrm/postalcode/edit</path>
+    <page_callback>CRM_PostalcodeRange_Form_EditPostalCode</page_callback>
+    <title>EditPostalCode</title>
+    <access_arguments>access CiviCRM</access_arguments>
+  </item>
 </menu>

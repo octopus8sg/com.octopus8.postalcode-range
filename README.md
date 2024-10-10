@@ -23,13 +23,14 @@ This extension has a form named “Add Postal Code” to key in the Postal Code 
 5. If the postal code of the prospect doesn’t fall within the range, contact will be tagged automatically as “Out_of_service_boundary”.
 ![Alt text](images/image4.png)
 
-6. If not, "In_service_boundary" tag will be assigned to the contact.
+6. If not, "In_service_boundary" tag will be assigned to the contact. The user will be seeing either “Out_of_service_boundary” or "In_service_boundary" tag only. But if there are other tags outside of those two, the user will be able to see those tags. 
+![alt text](images/image6.png)
 
 7. If you want to view or delete the postal codes in the range, Go to "Postal Code >> Find Postal Code".
 ![Alt text](images/image1.png)
 
-8. You can delete or view the range of postal codes. You can also add the postal code inside the range.
-![Alt text](images/image3.png)
+8. You can delete or view the range of postal codes. You can also add the postal code inside the range. You can also edit the existing postal code inside the range. 
+![alt text](images/image3.png)
 
 This is an [extension for CiviCRM](https://docs.civicrm.org/sysadmin/en/latest/customize/extensions/), licensed under [AGPL-3.0](LICENSE.txt).
 

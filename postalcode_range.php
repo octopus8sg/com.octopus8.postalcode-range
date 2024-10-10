@@ -1,6 +1,7 @@
 <?php
 
 require_once 'postalcode_range.civix.php';
+global $contactPostalCode;
 
 use CRM_PostalcodeRange_ExtensionUtil as E;
 
@@ -9,7 +10,8 @@ use CRM_PostalcodeRange_ExtensionUtil as E;
  *
  * @link https://docs.civicrm.org/dev/en/latest/hooks/hook_civicrm_config/
  */
-function postalcode_range_civicrm_config(&$config): void {
+function postalcode_range_civicrm_config(&$config): void
+{
   _postalcode_range_civix_civicrm_config($config);
 }
 
@@ -18,7 +20,8 @@ function postalcode_range_civicrm_config(&$config): void {
  *
  * @link https://docs.civicrm.org/dev/en/latest/hooks/hook_civicrm_install
  */
-function postalcode_range_civicrm_install(): void {
+function postalcode_range_civicrm_install(): void
+{
   _postalcode_range_civix_civicrm_install();
 }
 
@@ -27,8 +30,36 @@ function postalcode_range_civicrm_install(): void {
  *
  * @link https://docs.civicrm.org/dev/en/latest/hooks/hook_civicrm_enable
  */
-function postalcode_range_civicrm_enable(): void {
+function postalcode_range_civicrm_enable(): void
+{
   _postalcode_range_civix_civicrm_enable();
+
+  // Define the tags you want to create
+  $tags = [
+    'In_service_boundary',
+    'Out_of_service_boundary'
+  ];
+
+  foreach ($tags as $tagName) {
+    // Check if the tag already exists
+    $existingTag = civicrm_api4('Tag', 'get', [
+      'select' => ['id'],
+      'where' => [
+        ['name', '=', $tagName],
+      ],
+    ])->first();
+
+    // If the tag does not exist, create it
+    if (empty($existingTag)) {
+      civicrm_api4('Tag', 'create', [
+        'values' => [
+          'name' => $tagName,
+          'description' => "{$tagName} tag created by my extension",
+          'used_for' => 'civicrm_contact', // Adjust this based on your use case
+        ],
+      ]);
+    }
+  }
 }
 
 /**
@@ -38,43 +69,43 @@ function postalcode_range_civicrm_enable(): void {
  */
 function postalcode_range_civicrm_navigationMenu(&$menu)
 {
-    if (!CRM_Core_Permission::check('administer CiviCRM')) {
-        CRM_Core_Session::setStatus('', ts('Insufficient permission'), 'error');
-        return;
-    }
-//    $currentUserId = CRM_Core_Session::getLoggedInContactID();
+  if (!CRM_Core_Permission::check('administer CiviCRM')) {
+    CRM_Core_Session::setStatus('', ts('Insufficient permission'), 'error');
+    return;
+  }
+  //    $currentUserId = CRM_Core_Session::getLoggedInContactID();
 
-    _postalcode_range_civix_insert_navigation_menu($menu, '', array(
-        'label' => E::ts('Postal Code'),
-        'name' => 'postalcode',
-        'icon' => 'crm-i fa-map-marker',
-        'url' => 'civicrm/postalcode',
-        'permission' => 'access CiviCRM',
-        'navID' => 10,
-        'operator' => 'OR',
-        'separator' => 0,
-    ));
-    _postalcode_range_civix_navigationMenu($menu);
+  _postalcode_range_civix_insert_navigation_menu($menu, '', array(
+    'label' => E::ts('Postal Code'),
+    'name' => 'postalcode',
+    'icon' => 'crm-i fa-map-marker',
+    'url' => 'civicrm/postalcode',
+    'permission' => 'access CiviCRM',
+    'navID' => 10,
+    'operator' => 'OR',
+    'separator' => 0,
+  ));
+  _postalcode_range_civix_navigationMenu($menu);
 
-    _postalcode_range_civix_insert_navigation_menu($menu, 'postalcode', array(
-        'label' => E::ts('Add Postal Code'),
-        'name' => 'postalcode_add',
-        'url' => 'civicrm/postalcode',
-        'permission' => 'administer CiviCRM',
-        'operator' => 'OR',
-        'separator' => 0,
-    ));
-    _postalcode_range_civix_navigationMenu($menu);
+  _postalcode_range_civix_insert_navigation_menu($menu, 'postalcode', array(
+    'label' => E::ts('Add Postal Code'),
+    'name' => 'postalcode_add',
+    'url' => 'civicrm/postalcode',
+    'permission' => 'administer CiviCRM',
+    'operator' => 'OR',
+    'separator' => 0,
+  ));
+  _postalcode_range_civix_navigationMenu($menu);
 
-    _postalcode_range_civix_insert_navigation_menu($menu, 'postalcode', array(
-        'label' => E::ts('Find Postal Code'),
-        'name' => 'postalcode_find',
-        'url' => 'civicrm/postalcode/search',
-        'permission' => 'access CiviCRM',
-        'operator' => 'OR',
-        'separator' => 0,
-    ));
-    _postalcode_range_civix_navigationMenu($menu);
+  _postalcode_range_civix_insert_navigation_menu($menu, 'postalcode', array(
+    'label' => E::ts('Find Postal Code'),
+    'name' => 'postalcode_find',
+    'url' => 'civicrm/postalcode/search',
+    'permission' => 'access CiviCRM',
+    'operator' => 'OR',
+    'separator' => 0,
+  ));
+  _postalcode_range_civix_navigationMenu($menu);
 }
 
 
@@ -84,51 +115,82 @@ function postalcode_range_civicrm_navigationMenu(&$menu)
  *
  * @link https://docs.civicrm.org/dev/en/latest/hooks/hook_civicrm_post
  */
-function postalcode_range_civicrm_post(string $op, string $objectName, int $objectId, &$objectRef) {
-  Civi::log()->info('Operation: ' . $op . ', Object Name: ' . $objectName);
 
-  if (($objectName == 'Address' || $objectName == 'Contact') && ($op == 'create' || $op == 'edit')) {
-    Civi::log()->info('Processing address for object ID: ' . $objectId);
-    updateContactTagsBasedOnPostalCodes($objectId);
-  } else {
-    Civi::log()->info('Post hook works, but object is not Address.');
-  }  
+
+function postalcode_range_civicrm_pre($op, $objectName, $id, &$params)
+{
+  if ($objectName == 'Individual' && $op == 'edit') {
+    // Check if the postal code is present in the form data
+    // Civi::log()->debug("This is the params pre : " . print_r($params, true));
+    $inServiceTagId = getTagIdByName('In_service_boundary');
+    $outOfServiceTagId = getTagIdByName('Out_of_service_boundary');
+    $receiveTags = explode(',', $params['tag']);
+    $receiveTags = array_diff($receiveTags, [(string) $inServiceTagId, (string) $outOfServiceTagId]);
+
+    if (!empty($params['address'][1]['postal_code'])) {
+      $postalCode = $params['address'][1]['postal_code'];
+
+      $correctTagId = checkingOutOrInServiceBoundary($postalCode);
+
+    } else {
+      // If postal code is not set or null, assign 'out-of-service-boundary' tag
+      // $params['tag'] = 7; // Out of service boundary
+      $correctTagId = '';
+    }
+    $receiveTags[] = (string) $correctTagId;
+    $params['tag'] = implode(',', $receiveTags);
+  }
 }
 
-function updateContactTagsBasedOnPostalCodes($addressId) {
-  Civi::log()->info('Address id:' . $addressId );
 
-  // Step 1: Retrieve all contacts with their postal codes
-  $addresses = civicrm_api4('Address', 'get', [
-      'select' => [
-          'postal_code',
-          'contact_id',
-      ],
-      'where' => [
-          ['id', '=', $addressId],
-          ['postal_code', 'IS NOT NULL'],
-      ],
+function postalcode_range_civicrm_post($op, $objectName, $objectId, &$objectRef)
+{
+  Civi::log()->debug("op: " . $op . ", objectName: " . $objectName . ", objectid: " . $objectId);
+  // Make sure we're working with an Individual contact on creation or update
+  if ($objectName == 'Individual' && $op == 'create') {
+
+    // Fetch the contact's postal code from the address
+    $addresses = civicrm_api4('Address', 'get', [
+      'select' => ['postal_code', 'contact_id'],
+      'where' => [['contact_id', '=', $objectId]],
       'checkPermissions' => FALSE,
-  ]);
+    ]);
 
-  if (empty($addresses)) {
-    CRM_Core_Error::debug_log_message("updateContactTagsBasedOnPostalCodes: No addresses found for Contact ID $addressId");
-    return;
+    if (!empty($addresses)) {
+      $postalCode = $addresses[0]['postal_code'];
+
+      // Determine if the postal code is in-service or out-of-service
+      if (!empty($postalCode)) {
+        $correctTagId = checkingOutOrInServiceBoundary($postalCode);
+
+        // Assign the correct tag using the EntityTag API
+        if ($correctTagId) {
+          civicrm_api4('EntityTag', 'create', [
+            'values' => [
+              'entity_id' => $objectId, // Use the contact ID available in post hook
+              'tag_id' => $correctTagId,
+              'entity_table' => 'civicrm_contact',
+            ],
+          ]);
+        }
+      }
+    }
   }
+}
 
-  //$postalcode = $addresses['postal_code'];
-  Civi::log()->debug('Contact ID:' . $addresses[0]['contact_id'] );
 
-  $contactId = $addresses[0]['contact_id'];
-  $contactPostalCode = $addresses[0]['postal_code'];
+
+function checkingOutOrInServiceBoundary($postalCode)
+{
+  $contactPostalCode = $postalCode;
 
   // Step 2: Retrieve all postal codes from the custom table
   $query = "SELECT postal_code FROM civicrm_aac_postal";
   $dao = CRM_Core_DAO::executeQuery($query);
   $serviceBoundaryPostalCodes = [];
   while ($dao->fetch()) {
-      $serviceBoundaryPostalCodes[] = $dao->postal_code;
-      Civi::log()->debug('Table Postal:' . implode(', ', $serviceBoundaryPostalCodes));
+    $serviceBoundaryPostalCodes[] = $dao->postal_code;
+    Civi::log()->debug('Table Postal:' . implode(', ', $serviceBoundaryPostalCodes));
   }
 
   // Step 3: Get tag IDs
@@ -138,100 +200,21 @@ function updateContactTagsBasedOnPostalCodes($addressId) {
   // Step 4: Compare postal codes and assign tags
 
   $tagId = in_array($contactPostalCode, $serviceBoundaryPostalCodes) ? $inServiceTagId : $outOfServiceTagId;
-    //Civi::log()->debug('contact Postal:' . $contactPostalCode );
-    //Civi::log()->debug('contact id:' . $contact_Id );
-    //Civi::log()->debug('contact id:' . $tagId );
-    
-    CRM_Core_Session::setStatus(ts(json_encode($tagId)),ts('Info'),'info');
+  Civi::log()->debug('Correct Tag ID', ['tagId' => $tagId]);
 
-    // Remove old tags
-    removeServiceBoundaryTags($contactId, [$inServiceTagId, $outOfServiceTagId]);
-
-    // Assign new tag
-    assignTagToContact($contactId, $tagId);
+  return $tagId;
 }
 
-function getTagIdByName($tagName) {
+
+function getTagIdByName($tagName)
+{
   $tag = civicrm_api4('Tag', 'get', [
-      'select' => ['id'],
-      'where' => [['name', '=', $tagName]],
+    'select' => ['id'],
+    'where' => [['name', '=', $tagName]],
   ]);
   if (empty($tag)) {
-      throw new Exception("Tag not found: $tagName");
+    throw new Exception("Tag not found: $tagName");
   }
   return $tag[0]['id'];
 }
-
-
-function removeServiceBoundaryTags($contactId, $tagIds) {
-  foreach ($tagIds as $tagId) {
-    $existingTag = civicrm_api4('EntityTag', 'get', [
-        'select' => ['id'],
-        'where' => [
-            ['entity_table', '=', 'civicrm_contact'],
-            ['entity_id', '=', $contactId],
-            ['tag_id', '=', $tagId],
-        ],
-        'checkPermissions' => FALSE,
-    ]);
-    CRM_Core_Session::setStatus(ts(json_encode($contactId)),ts('Info'),'info');
-    CRM_Core_Session::setStatus(ts(json_encode($tagId)),ts('Info'),'info');
-
-    if (!empty($existingTag)) {
-      civicrm_api4('EntityTag', 'delete', [
-          'where' => [
-              ['entity_table', '=', 'civicrm_contact'],
-              ['entity_id', '=', $contactId],
-              ['tag_id', '=', $tagId],
-          ],
-          'checkPermissions' => FALSE,
-      ]);
-    } 
-  }
-}
-
-function assignTagToContact($contactId, $tagId) {
-  Civi::log()->debug("hi");
-  Civi::log()->debug('contact id:' . $contactId );
-  Civi::log()->debug('tag id:' . $tagId );
-
-    $result= civicrm_api4('EntityTag', 'create', [
-      'values' => [
-          'entity_table' => 'civicrm_contact',
-          'entity_id' => $contactId,
-          'tag_id' => $tagId,
-      ],
-      'checkPermissions' => FALSE,
-  ]);
-  Civi::log()->debug("result   " . count($result[0]));
-}
-
-/* function removeServiceBoundaryTags($contactId, $tagIds) {
-  foreach ($tagIds as $tagId) {
-    $existingTags = civicrm_api4('EntityTag', 'get', [
-      'select' => ['id'],
-      'where' => [
-        ['entity_table', '=', 'civicrm_contact'],
-        ['entity_id', '=', $contactId],
-        ['tag_id', '=', $tagId],
-      ],
-    ]);
-
-    Civi::log()->debug('Existing Tags to remove for Contact ID: ' . $contactId . ', Tag ID: ' . $tagId . ': ' . json_encode($existingTags));
-
-    if (!empty($existingTags)) {
-      foreach ($existingTags as $tag) {
-        civicrm_api4('EntityTag', 'delete', [
-          'where' => [
-            ['id', '=', $tag['id']],
-          ],
-        ]);
-      }
-    }
-  }
-}
- */
-
-
-
 

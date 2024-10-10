@@ -30,7 +30,7 @@ This extension has a form named “Add Postal Code” to key in the Postal Code 
 ![Alt text](images/image1.png)
 
 8. You can delete or view the range of postal codes. You can also add the postal code inside the range. You can also edit the existing postal code inside the range. 
-![alt text](images/image3.png)
+![alt text](images/image5.png)
 
 This is an [extension for CiviCRM](https://docs.civicrm.org/sysadmin/en/latest/customize/extensions/), licensed under [AGPL-3.0](LICENSE.txt).
 

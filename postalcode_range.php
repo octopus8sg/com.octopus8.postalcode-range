@@ -67,6 +67,7 @@ function postalcode_range_civicrm_enable(): void
  *
  * @link https://docs.civicrm.org/dev/en/latest/hooks/hook_civicrm_navigationMenu
  */
+/*
 function postalcode_range_civicrm_navigationMenu(&$menu)
 {
   if (!CRM_Core_Permission::check('administer CiviCRM')) {
@@ -107,7 +108,7 @@ function postalcode_range_civicrm_navigationMenu(&$menu)
   ));
   _postalcode_range_civix_navigationMenu($menu);
 }
-
+*/
 
 
 /**
@@ -130,7 +131,7 @@ function postalcode_range_civicrm_pre($op, $objectName, $id, &$params)
     if (!empty($params['address'][1]['postal_code'])) {
       $postalCode = $params['address'][1]['postal_code'];
 
-      $correctTagId = checkingOutOrInServiceBoundary($postalCode);
+      $correctTagId = checkingInOrOutOfServiceBoundaryUpdated($postalCode);
 
     } else {
       // If postal code is not set or null, assign 'out-of-service-boundary' tag
@@ -161,7 +162,7 @@ function postalcode_range_civicrm_post($op, $objectName, $objectId, &$objectRef)
 
       // Determine if the postal code is in-service or out-of-service
       if (!empty($postalCode)) {
-        $correctTagId = checkingOutOrInServiceBoundary($postalCode);
+        $correctTagId = checkingInOrOutOfServiceBoundaryUpdated($postalCode);
 
         // Assign the correct tag using the EntityTag API
         if ($correctTagId) {
@@ -178,6 +179,46 @@ function postalcode_range_civicrm_post($op, $objectName, $objectId, &$objectRef)
   }
 }
 
+function checkingInOrOutOfServiceBoundaryUpdated($postalCode)
+{
+
+  $contactPostalCode = $postalCode;
+
+  //getting tag ID 
+  $inServiceTagId = getTagIdByName('In_service_boundary');
+  $outOfServiceTagId = getTagIdByName('Out_of_service_boundary');
+
+  //get all the AAC with the postal codes 
+  $aacPostalCodes = civicrm_api4('Contact', 'get', [
+    'select' => [
+      'organization_name',
+      'Organization_AAC_Details.List_of_Postal_Code_Serve',
+    ],
+    'where' => [
+      ['contact_type', '=', 'Organization'],
+      ['contact_sub_type', '=', 'AAC'],
+    ],
+    'checkPermissions' => TRUE,
+  ]);
+
+  Civi::log()->debug("AAC Postal Codes : " . print_r($aacPostalCodes, true));
+
+  //Running though AAC one by one and checking whether the postal code matches. 
+  foreach ($aacPostalCodes as $org) {
+    // Split the postal code list into an array
+    $serviceBoundaryPostalCodes = explode(',', str_replace(' ', '', $org["Organization_AAC_Details.List_of_Postal_Code_Serve"]));
+    Civi::log()->debug("AAC Postal Codes serviceBoundaryPostalCodes of each: " . print_r($serviceBoundaryPostalCodes, true));
+
+    // Check if the contact postal code is in the list
+    $tagId = in_array($contactPostalCode, $serviceBoundaryPostalCodes) ? $inServiceTagId : $outOfServiceTagId;
+    if ($tagId == $inServiceTagId) {
+      return $tagId;
+    }
+  }
+  return $tagId;
+  // Return null if no match is found
+  // return null;
+}
 
 
 function checkingOutOrInServiceBoundary($postalCode)
